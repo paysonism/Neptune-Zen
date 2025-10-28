@@ -247,9 +247,9 @@ define MacroDelay = 78, MacroWait = 79, MacroParameters = 90, CharacterOne = 66,
 init
 {
     cls_oled(0);
-    adt_off();
+    adt_off(PS5_L2);
     
-    adt_off();
+    adt_off(PS5_L2);
     ControllerType = get_controller();
     
     // VM Trigger Control is set to -6 because that improves the trigger response time on Xbox controllers while also keeping the code
@@ -2144,3 +2144,4 @@ const int16 PolarArray[] = {
     98, 99, 99, 99, 99, 100, 100,
     100, 100, 100, 100, 100 
 };
+
