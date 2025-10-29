@@ -9,7 +9,7 @@
 
     MAKE SURE TO CONFIGURE THE SCRIPTS BUTTON MAPPINGS ON LINES 82-92 TO YOUR PREFERENCE!
 */
-const string PaysonScripts = "Payson1337";
+const string PaysonScripts = "Neptune FN";
 const string OffMessage = "Off";
 const string OnMessage = "On";
 const string SavedMessage = "Saved!";
@@ -17,11 +17,26 @@ const string AllProfilesMessage = "All Profiles";
 const string ScriptOffMessage = "Disabled Script";
 const string EnableScriptMessage = "Tap Circle/B 2x";
 const string EnableScriptMessageNext = "to Enable";
-const string PSMenuInstructions[] = {"Neptune", "github.com/paysonism"};
-const string PSEditInstructions[] = {"Neptune", "github.com/paysonism"};
-const string XboxMenuInstructions[] = {"Neptune", "github.com/paysonism"};
-const string XboxEditInstructions[] = {"Neptune", "github.com/paysonism"};
+const string PSMenuInstructions[] = {"Neptune", "Paysonism"};
+const string PSEditInstructions[] = {"Neptune", "Paysonism"};
+const string XboxMenuInstructions[] = {"Neptune", "Paysonism"};
+const string XboxEditInstructions[] = {"Neptune", "Paysonism"};
 int Script = TRUE;    
+int super_sticky_toggle = FALSE;
+int super_polar_toggle = TRUE;  // advanced version
+int super_angle = 0;
+int super_power = 20;  // Adjustable power (0-100)
+int super_speed = 3;   // Angle increment speed
+const int8 SuperPolarArray[] = {
+    100,100,100,100,100,100,100,100,99,99,99,99,98,98,97,97,97,96,95,95,94,94,93,92,92,91,90,89,89,88,87,86,85,84,83,82,81,80,79,78,77,75,74,73,72,
+    71,70,69,67,66,65,63,62,61,59,58,56,55,53,52,50,49,47,46,44,43,41,40,38,36,35,33,31,30,28,26,25,23,21,20,18,16,14,13,11,9,7,6,4,2,0,-1,-3,-5,-7,
+    -8,-10,-12,-13,-15,-17,-19,-20,-22,-24,-25,-27,-29,-30,-32,-34,-35,-37,-39,-40,-42,-43,-45,-46,-48,-50,-51,-53,-54,-55,-57,-58,-60,-61,-62,-64,
+    -65,-66,-68,-69,-70,-71,-73,-74,-75,-76,-77,-78,-79,-80,-81,-82,-83,-84,-85,-86,-87,-88,-89,-89,-90,-91,-92,-92,-93,-93,-94,-95,-95,-96,-96,-97,
+    -97,-97,-98,-98,-99,-99,-99,-99,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-99,-99,-99,-98,-98,-98,-97,-97,-96,-96,-95,
+    -94,-94,-93,-93,-92,-91,-90,-90,-89,-88,-87,-86,-85,-84,-83,-82,-81,-80,-79,-78,-77,-76,-75,-74,-72,-71,-70,-69,-67,-66,-65,-63,-62,-61,-59,-58,
+    -56,-55,-53,-52,-50,-49,-47,-46,-44,-43,-41,-40,-38,-36,-35,-33,-31,-30,-28,-26,-25,-23,-21,-20,-18,-16,-14,-13,-11,-9,-7,-6,-4,-2,0,2,4,6,7,9,
+    11,13,14,16,18,20,21,23,25,26,28,30,31,33,35,36,38,40,41,43,44,46,47,49,50,52,53,55,56,58,59,61,62,63,65,66,67,69,70,71,72,73,74,75,77,78,79,80,81,82,83,84,85,86,87,88,89,89,90,91,92,92,93,93,94,95,95,96,96,97,97,97,98,98,99,99,99,99,100,100,100,100,100,100,100
+};
 int lastAutoTrackTime = 0;
 int AUTO_TRACK_INTERVAL_MS = 40; // 25 Hz — increase to 50 or 100 to reduce CPU load further (adds delay to auto-tracking mods)
 int lastAutoTrackLX = 0;
@@ -33,14 +48,18 @@ int RadarRadius[1];
 int radar_angle = 0;
 int radar_x, radar_y;
 int startup_delay = 0;
-define MAX_DROPS = 8;
+int ENABLE_RAIN_ANIMATION = TRUE; // Set to FALSE to completely disable rain for max performance
+define MAX_DROPS = 4; // Reduced from 8 to 4 for better performance
 int drop_x[MAX_DROPS];
 int drop_y[MAX_DROPS];
 int drop_speed[MAX_DROPS];
 int drop_length[MAX_DROPS];
 int frame = 0;
+int precision_frame_counter = 0; // Frame counter for ControllerPrecision throttling
+int precision_active = FALSE; // Track if precision enhancement is currently active
 int i, j;
-const string ValuesList[] = {"Auto-Tracking", "Anti-Recoil", "Pro Enhancers", "Sticky Scope", "Aim Assist", "Crouch Shot", "Radar Speed"};
+const string ValuesList[] = {"Auto-Tracking", "Recoil Control", "Precision Aim", "Sticky Aim", "Aim Assist", "Crouch Shot", "Radar Speed", "Deadzone Center"};
+define DeadzoneCenterValue = 7;
 define RadarSpeedValue = 6;
 define CrouchShotValue = 5;
 define PolarValue = 4;
@@ -54,14 +73,14 @@ int EnhancementPower[1];
 int StickyScopePower[1];
 int PolarPower[1];
 int CrouchShotDelay[1];
-const string FeaturesList[] = {"Auto-Tracking", "Pickup Macro", "Insta Reset", "Anti-Recoil", "No Delay", "Crouch Shot", "Anti-Bloom", "No Vibration", "Pre-Fire", "Rapid Fire", "Pro Enhancers", "Sticky Scope", "Aim Abuse", "Aim Assist", "Sharp Shooter", "Radar", "Turbo Edit"};
-define AutoTrackingMod = 0, PickupMacroMod = 1, InstaResetMod = 2, AntiRecoilMod = 3, NoDelayMod = 4, CrouchShotMod = 5, AntiBloomMod = 6, NoVibrationMod = 7, PreFireMod = 8, RapidFireMod = 9, EnhancementMod = 10, StickyScopeMod = 11, AimAbuseMod = 12, ProMod = 13, SharpshooterMod = 14;
-define TurboEditMod = 16;
+int DeadzoneCenterPower[1];
+const string FeaturesList[] = {"Auto-Tracking", "Pickup Macro", "Insta Reset", "Recoil Control", "Crouch Shot", "Anti-Bloom", "No Vibration", "Pre-Fire", "Rapid Fire", "Precision Aim", "Sticky Aim", "Aim Abuse", "Aim Assist", "Sharp Shooter", "Radar", "Turbo Edit", "Deadzone Center"};
+define AutoTrackingMod = 0, PickupMacroMod = 1, InstaResetMod = 2, AntiRecoilMod = 3, CrouchShotMod = 4, AntiBloomMod = 5, NoVibrationMod = 6, PreFireMod = 7, RapidFireMod = 8, EnhancementMod = 9, StickyScopeMod = 10, AimAbuseMod = 11, AbuseMod = 12, SharpshooterMod = 13, DeadzoneCenterMod = 16;
+define TurboEditMod = 15;
 int AutoTrackingToggle[1];
 int PickupMacroToggle[1];
 int InstaResetToggle[1];
 int AntiRecoilToggle[1];
-int NoDelayToggle[1];
 int CrouchShotToggle[1];
 int AntiBloomToggle[1];
 int NoVibrationToggle[1];
@@ -73,7 +92,13 @@ int AimAbuseToggle[1];
 int ProToggle[1];
 int SharpshooterToggle[1];
 int TurboEditToggle[1];
+int DeadzoneCenterToggle[1];
 define ModCount = 17;
+int Payson_angle = 0;
+int Payson_power = 20;
+int Payson_speed = 3;
+int deadzone_threshold = 5; // deadzone centering threshold (0-20)
+int stick_magnitude = 0;
 define
     // To setup the script simply modify the values for each of the button mappings below.
     // Button mappings are set to Xbox by default, but can be changed to PS4/PS5 by changing the button constants.
@@ -158,6 +183,7 @@ define
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 
 int CurrentValue;
 const uint8 DigitalCharacters[] = {48, 49, 50, 51, 52, 53, 54, 55, 56, 57};
@@ -247,13 +273,12 @@ define MacroDelay = 78, MacroWait = 79, MacroParameters = 90, CharacterOne = 66,
 init
 {
     cls_oled(0);
-    adt_off(PS5_L2);
-    
-    adt_off(PS5_L2);
+    adt_off(PS5_L2); // ignore this error if you are getting it. it is caused because the GPC compiler
+                     // Intellisense does not recognize the arguments required for the adt_off function.
     ControllerType = get_controller();
     
-    // VM Trigger Control is set to -6 because that improves the trigger response time on Xbox controllers while also keeping the code
-    // stable to prevent audio glitching issues.
+    // VM Trigger Control is set to -6 at script initialization because that improves the trigger response time
+    // on Xbox controllers while also keeping the code stable to prevent audio glitching issues and other CPU load problems.
     vm_tctrl(-6);
     CurrentProfile = 0;
     combo_run(ShowLogo);
@@ -263,7 +288,6 @@ init
     PickupMacroToggle[0] = get_pvar(SPVAR_2, 0, 1, 0);
     InstaResetToggle[0] = get_pvar(SPVAR_3, 0, 1, 0);
     AntiRecoilToggle[0] = get_pvar(SPVAR_4, 0, 1, 0);
-    NoDelayToggle[0] = get_pvar(SPVAR_5, 0, 1, 1);
     CrouchShotToggle[0] = get_pvar(SPVAR_8, 0, 1, 0);
     AntiBloomToggle[0] = get_pvar(SPVAR_9, 0, 1, 0);
     NoVibrationToggle[0] = get_pvar(SPVAR_10, 0, 1, 1);
@@ -286,6 +310,9 @@ init
     RadarSpeed[0] = get_pvar(SPVAR_23, 5, 30, 12);
     RadarRadius[0] = get_pvar(SPVAR_24, 5, 50, 25);
     TurboEditToggle[0] = get_pvar(SPVAR_25, 0, 1, 0);
+    DeadzoneCenterToggle[0] = get_pvar(SPVAR_26, 0, 1, 0);
+    
+    DeadzoneCenterPower[0] = get_pvar(SPVAR_27, 1, 20, 5);
 
     for (i = 0; i < MAX_DROPS; i++)
     {
@@ -562,7 +589,6 @@ main
                 PickupMacroToggle[CurrentProfile] = Toggle(PickupMacroMod, PickupMacroToggle[CurrentProfile]);
                 InstaResetToggle[CurrentProfile] = Toggle(InstaResetMod, InstaResetToggle[CurrentProfile]);
                 AntiRecoilToggle[CurrentProfile] = Toggle(AntiRecoilMod, AntiRecoilToggle[CurrentProfile]);
-                NoDelayToggle[CurrentProfile] = Toggle(NoDelayMod, NoDelayToggle[CurrentProfile]);
                 CrouchShotToggle[CurrentProfile] = Toggle(CrouchShotMod, CrouchShotToggle[CurrentProfile]);
                 AntiBloomToggle[CurrentProfile] = Toggle(AntiBloomMod, AntiBloomToggle[CurrentProfile]);
                 NoVibrationToggle[CurrentProfile] = Toggle(NoVibrationMod, NoVibrationToggle[CurrentProfile]);
@@ -571,11 +597,12 @@ main
                 EnhancementToggle[CurrentProfile] = Toggle(EnhancementMod, EnhancementToggle[CurrentProfile]);
                 StickyScopeToggle[CurrentProfile] = Toggle(StickyScopeMod, StickyScopeToggle[CurrentProfile]);
                 AimAbuseToggle[CurrentProfile] = Toggle(AimAbuseMod, AimAbuseToggle[CurrentProfile]);
-                ProToggle[CurrentProfile] = Toggle(ProMod, ProToggle[CurrentProfile]);
+                ProToggle[CurrentProfile] = Toggle(AbuseMod, ProToggle[CurrentProfile]);
                 SharpshooterToggle[CurrentProfile] = Toggle(SharpshooterMod, SharpshooterToggle[CurrentProfile]);
                 RadarToggle[CurrentProfile] = Toggle(RadarMod, RadarToggle[CurrentProfile]);
                 
                 TurboEditToggle[CurrentProfile] = Toggle(TurboEditMod, TurboEditToggle[CurrentProfile]);
+                DeadzoneCenterToggle[CurrentProfile] = Toggle(DeadzoneCenterMod, DeadzoneCenterToggle[CurrentProfile]);
             }
 
             if (OpenEditMenu)
@@ -590,6 +617,7 @@ main
                     PolarPower[CurrentProfile] = AdjustingValue(PolarValue, PolarPower[CurrentProfile], -100, 100, 1, 10);
                     CrouchShotDelay[CurrentProfile] = AdjustingValue(CrouchShotValue, CrouchShotDelay[CurrentProfile], 0, 1000, 1, 10);
                     RadarSpeed[CurrentProfile] = AdjustingValue(RadarSpeedValue, RadarSpeed[CurrentProfile], 5, 30, 1, 5);
+                    DeadzoneCenterPower[CurrentProfile] = AdjustingValue(DeadzoneCenterValue, DeadzoneCenterPower[CurrentProfile], 1, 20, 1, 3);
                 }
                 else
                 {
@@ -625,12 +653,14 @@ main
                     
                     if (CurrentMod == StickyScopeMod)
                         CurrentValue = ClampValue(CurrentValue, StickyScopeValue, StickyScopeValue);
-                    if (CurrentMod == ProMod)
+                    if (CurrentMod == AbuseMod)
                         CurrentValue = ClampValue(CurrentValue, PolarValue, PolarValue);
                     if (CurrentMod == CrouchShotMod)
                         CurrentValue = ClampValue(CurrentValue, CrouchShotValue, CrouchShotValue);
                     if (CurrentMod == RadarMod)
                         CurrentValue = ClampValue(CurrentValue, RadarSpeedValue, RadarSpeedValue);
+                    if (CurrentMod == DeadzoneCenterMod)
+                        CurrentValue = ClampValue(CurrentValue, DeadzoneCenterValue, DeadzoneCenterValue);
                 }
             }
 
@@ -659,8 +689,20 @@ main
                         combo_run(InstantReset);
                     }
                 }
-                
 
+                if (AutoTrackingToggle)
+                {
+                    if(abs(get_ival(LX)) <= 35 && abs(get_ival(LY)) <= 35) 
+                    {
+                        combo_run(AutoTracking);
+                    } 
+                    else 
+                    {
+                        combo_run(AutoTracking);
+                    }
+                }
+                
+/* smooth auto tracking. (doesnt really pull that well, on some settings it doesnt at all.)
                 if (AutoTrackingToggle)
                 {
                     if (get_rtime() - lastAutoTrackTime >= AUTO_TRACK_INTERVAL_MS)
@@ -691,7 +733,7 @@ main
                         lastAutoTrackLX = 0;
                         set_val(LX, 0);
                     }
-                }
+                }*/
             }
 
                 if (AntiRecoilToggle)
@@ -737,9 +779,6 @@ main
                 {
                     combo_stop(PickupMacro);
                 }
-
-                // Moved vm_tctrl to init() to prevent every-frame execution
-                // NoDelay functionality now handled via reduced wait times in combos
 
                 if (PreFireToggle)
                 {
@@ -836,8 +875,27 @@ main
                     {
                         AAT = 0;
                         Axis = 0;
+                        precision_active = FALSE; // stop when not aiming or firing
+                        precision_frame_counter = 0;
                     }
-                    combo_run(ControllerPrecision);
+                    
+                    // new precision function event-based + frame throttling
+                    if ((event_press(ADS) || event_press(Fire)) && !precision_active)
+                    {
+                        precision_active = TRUE;
+                        precision_frame_counter = 0;
+                        combo_run(ControllerPrecision);
+                    }
+                    else if (precision_active && (get_ival(ADS) || get_ival(Fire)))
+                    {
+                        precision_frame_counter++;
+                        if (precision_frame_counter >= 5) // Run every 5 frames when active
+                        {
+                            precision_frame_counter = 0;
+                            combo_run(ControllerPrecision);
+                        }
+                    }
+                    
                     Aim_Val = EnhancementPower[CurrentProfile];
                     Wait_Val = 20;
                 }
@@ -848,45 +906,50 @@ main
                     set_val(RY, (get_ival(RY) + random(-1, 1) * 2));
                 }
 
-                if (StickyScopeToggle)
+                // always active deadzone centering
+                if (DeadzoneCenterToggle[CurrentProfile])
                 {
-                    if (get_val(Fire))
+                    stick_magnitude = isqrt(pow(abs(get_ival(RX)), 2) + pow(abs(get_ival(RY)), 2));
+                    if (stick_magnitude <= DeadzoneCenterPower[CurrentProfile])
                     {
-                        combo_run(AA1);
-                        combo_run(AA2);
-                        actual_X = get_val(RX);
-                        actual_Y = get_val(RY);
-                        actual_Magnitude = isqrt(pow(actual_X, 2) + pow(actual_Y, 2));
-                        
-                        max_Magnitude = (actual_Magnitude < 100);
-                        if (!(time++ % STEP_INTERVAL))
-                        {
-                            angle += STEPS;
-                        }
-                        angle = angle % 360;
-
-                        sin_angle = PolarArray[angle % 360];
-                        cos_angle = PolarArray[(angle) % 360];
-
-                        cos_angle = (cos_angle * PolarPower) / 200;
-                        sin_angle = (sin_angle * PolarPower) / 200;
-
-                        if (get_val(ADS) || get_val(Fire))
-                        {
-                            if (actual_Magnitude <= PolarPower)
-                            {
-                                sin_angle -= actual_Y;
-                                cos_angle -= actual_X;
-                            }
-                            else
-                            {
-                                sin_angle = (sin_angle * (200 - ((abs(actual_Y) + actual_Magnitude) / 10) * 10) / 200) * max_Magnitude;
-                                cos_angle = (cos_angle * (200 - ((abs(actual_X) + actual_Magnitude) / 10) * 10) / 200) * max_Magnitude;
-                            }
-                            set_val(RX, clamp(actual_X + cos_angle, -100, 100));
-                            set_val(RY, clamp(actual_Y + sin_angle, -100, 100));
-                        }
+                        set_val(RX, 0);
+                        set_val(RY, 0);
                     }
+                }
+
+                // sticky aim for only while you are aiming or firing
+                if (StickyScopeToggle[CurrentProfile] && (get_val(ADS) || get_val(Fire)))
+                {
+                    actual_X = get_val(RX);
+                    actual_Y = get_val(RY);
+                    actual_Magnitude = isqrt(pow(actual_X, 2) + pow(actual_Y, 2));
+                    max_Magnitude = (actual_Magnitude < 100);
+                    
+                    Payson_angle += Payson_speed;
+                    Payson_angle = Payson_angle % 360;
+                    
+                    // get sine and cosine values from the new polar table
+                    sin_angle = PaysonPolarArray[Payson_angle % 360];
+                    cos_angle = PaysonPolarArray[(Payson_angle + 270) % 360]; // 270 degrees offset for the cosine
+                    
+                    // scale from power setting
+                    cos_angle = (cos_angle * StickyScopePower[CurrentProfile]) / 100;
+                    sin_angle = (sin_angle * StickyScopePower[CurrentProfile]) / 100;
+                    
+                    // apply magnitude adjustment
+                    if (actual_Magnitude <= 10) {
+                        // tiny movements - direct subtraction
+                        sin_angle -= actual_Y;
+                        cos_angle -= actual_X;
+                    } else {
+                        // larger movements scale down based on the magnitude
+                        sin_angle = (sin_angle * (200 - ((abs(actual_Y) + actual_Magnitude) / 10) * 10) / 200) * max_Magnitude;
+                        cos_angle = (cos_angle * (200 - ((abs(actual_X) + actual_Magnitude) / 10) * 10) / 200) * max_Magnitude;
+                    }
+                    
+                    // apply 2 stick
+                    set_val(RX, clamp(actual_X + cos_angle, -100, 100));
+                    set_val(RY, clamp(actual_Y + sin_angle, -100, 100));
                 }
                 
 
@@ -976,6 +1039,7 @@ main
             if (RefreshFooter)
             {
                 MenuCounter = 0;
+                line_oled(1, 48, 126, 48, 1, OLED_WHITE);
                 rect_oled(1, 50, 126, 13, OLED_WHITE, OLED_BLACK);
                 if (OpenMainMenu)
                 {
@@ -1019,48 +1083,32 @@ main
             UpdateDisplay = FALSE;
         }
 
-    if (!OpenMainMenu && !OpenEditMenu && !ShowText && startup_delay > 100 && frame % 10 == 0)  // Changed from every 5 frames to every 15 frames (67% reduction)
+    // Heavily optimized rain animation - runs every 30 frames instead of 10 (70% reduction)
+    if (ENABLE_RAIN_ANIMATION && !OpenMainMenu && !OpenEditMenu && !ShowText && startup_delay > 100 && frame % 30 == 0)
     {
         cls_oled(0);
         image_oled(0, 0, 1, 1, PaysonLogo[0]);
-        for (i = 0; i < MAX_DROPS; i++)
+        // Reduced from MAX_DROPS to MAX_DROPS/2 for 50% less processing
+        for (i = 0; i < MAX_DROPS/2; i++)
         {
             drop_y[i] = drop_y[i] + drop_speed[i];
-            if (drop_y[i] - drop_length[i] > 63)
+            if (drop_y[i] > 70) // Simplified bounds check
             {
-                drop_y[i] = random(-30, 0);
-                drop_x[i] = random(0, 127);
-                drop_speed[i] = random(2, 4);
-                drop_length[i] = random(5, 12);
+                drop_y[i] = random(-20, -5);
+                drop_x[i] = random(10, 118);
+                drop_speed[i] = random(2, 3);
+                drop_length[i] = 3; // Fixed length instead of random
             }
-            for (j = 0; j < drop_length[i]; j++)
+            // Simplified single pixel per drop instead of multiple
+            if (drop_y[i] >= 0 && drop_y[i] <= 63)
             {
-                
-                if (drop_y[i] - j >= 0 && drop_y[i] - j <= 63)
-                {
-                    if (j < 2)
-                    {
-                        pixel_oled(drop_x[i], drop_y[i] - j, 1);
-                    }
-                    else if (j < drop_length[i] / 2)
-                    {
-                        pixel_oled(drop_x[i], drop_y[i] - j, 1);
-                    }
-                    else
-                    {
-                        if (j % 2 == 0)
-                        {
-                            pixel_oled(drop_x[i], drop_y[i] - j, 1);
-                        }
-                    }
-                }
+                pixel_oled(drop_x[i], drop_y[i], 1);
             }
         }
     }
-    frame = frame + 1;
-    if (frame > 1000)
-        frame = 0;
-    startup_delay++;
+    frame++;
+    if (frame > 1000) frame = 0;
+    if (startup_delay < 200) startup_delay++; // Stop incrementing after 200
 }
 
 combo PickupMacro
@@ -1093,7 +1141,6 @@ combo RumbleActivate
 
 combo RumbleDeactivate
 {
-    set_rgb(255, 0, 0);
     set_rumble(RUMBLE_A, 50);
     wait(300);
     reset_rumble();
@@ -1115,11 +1162,8 @@ function AntiRecoilPower()
 {
     if (get_val(Fire) && get_val(ADS))
     {
-        combo_run(AntiRecoilPower);
-        if (abs(get_val(PS4_RX)) + abs(get_val(PS4_RY)) > AntiRecoilPower - 100 + 100)
-        {
-            combo_stop(AntiRecoilPower);
-        }
+        // Apply anti-recoil directly instead of infinite recursion
+        set_val(PS4_RY, get_val(PS4_RY) + AntiRecoilPower[CurrentProfile]);
     }
 }
 
@@ -1157,8 +1201,6 @@ function UpdateStatusDisplay()
     StatusDisplay(PickupMacroMod, PickupMacroToggle[CurrentProfile]);
     StatusDisplay(InstaResetMod, InstaResetToggle[CurrentProfile]);
     StatusDisplay(AntiRecoilMod, AntiRecoilToggle[CurrentProfile]);
-    StatusDisplay(NoDelayMod, NoDelayToggle[CurrentProfile]);
-    
     StatusDisplay(CrouchShotMod, CrouchShotToggle[CurrentProfile]);
     StatusDisplay(AntiBloomMod, AntiBloomToggle[CurrentProfile]);
     StatusDisplay(NoVibrationMod, NoVibrationToggle[CurrentProfile]);
@@ -1167,10 +1209,11 @@ function UpdateStatusDisplay()
     StatusDisplay(EnhancementMod, EnhancementToggle[CurrentProfile]);
     StatusDisplay(StickyScopeMod, StickyScopeToggle[CurrentProfile]);
     StatusDisplay(AimAbuseMod, AimAbuseToggle[CurrentProfile]);
-    StatusDisplay(ProMod, ProToggle[CurrentProfile]);
+    StatusDisplay(AbuseMod, ProToggle[CurrentProfile]);
     StatusDisplay(SharpshooterMod, SharpshooterToggle[CurrentProfile]);
     StatusDisplay(RadarMod, RadarToggle[CurrentProfile]);
     StatusDisplay(TurboEditMod, TurboEditToggle[CurrentProfile]);
+    StatusDisplay(DeadzoneCenterMod, DeadzoneCenterToggle[CurrentProfile]);
 }
 
 function DisplayModValues()
@@ -1188,8 +1231,9 @@ function DisplayModValues()
     else if (CurrentValue == CrouchShotValue)
         DisplayValue(CrouchShotDelay[CurrentProfile], CountDigits(CrouchShotDelay[CurrentProfile]));
     else if (CurrentValue == RadarSpeedValue)
-        
         DisplayValue(RadarSpeed[CurrentProfile], CountDigits(RadarSpeed[CurrentProfile]));
+    else if (CurrentValue == DeadzoneCenterValue)
+        DisplayValue(DeadzoneCenterPower[CurrentProfile], CountDigits(DeadzoneCenterPower[CurrentProfile]));
 }
 
 function DisplayMenuTitle()
@@ -1226,6 +1270,66 @@ function AdjustingValue(ListIndex, Values, MinimumAdjustedValue, MaximumAdjusted
     return Values;
 }
 
+function SaveCurrentValue()
+{
+    // save the current value being edited immediately to SPVAR
+    if (CurrentValue == AutoTrackingValue)
+        set_pvar(SPVAR_7, AutoTrackingPower[CurrentProfile]);
+    else if (CurrentValue == AntiRecoilValue)
+        set_pvar(SPVAR_6, AntiRecoilPower[CurrentProfile]);
+    else if (CurrentValue == EnhancementValue)
+        set_pvar(SPVAR_14, EnhancementPower[CurrentProfile]);
+    else if (CurrentValue == StickyScopeValue)
+        set_pvar(SPVAR_17, StickyScopePower[CurrentProfile]);
+    else if (CurrentValue == PolarValue)
+        set_pvar(SPVAR_19, PolarPower[CurrentProfile]);
+    else if (CurrentValue == CrouchShotValue)
+        set_pvar(SPVAR_20, CrouchShotDelay[CurrentProfile]);
+    else if (CurrentValue == RadarSpeedValue)
+        set_pvar(SPVAR_23, RadarSpeed[CurrentProfile]);
+    else if (CurrentValue == DeadzoneCenterValue)
+        set_pvar(SPVAR_27, DeadzoneCenterPower[CurrentProfile]);
+}
+
+function SaveCurrentToggle(ListIndex, Values)
+{
+    // save the current toggle immediately to SPVAR
+    if (ListIndex == AutoTrackingMod)
+        set_pvar(SPVAR_1, Values);
+    else if (ListIndex == PickupMacroMod)
+        set_pvar(SPVAR_2, Values);
+    else if (ListIndex == InstaResetMod)
+        set_pvar(SPVAR_3, Values);
+    else if (ListIndex == AntiRecoilMod)
+        set_pvar(SPVAR_4, Values);
+    else if (ListIndex == CrouchShotMod)
+        set_pvar(SPVAR_8, Values);
+    else if (ListIndex == AntiBloomMod)
+        set_pvar(SPVAR_9, Values);
+    else if (ListIndex == NoVibrationMod)
+        set_pvar(SPVAR_10, Values);
+    else if (ListIndex == PreFireMod)
+        set_pvar(SPVAR_11, Values);
+    else if (ListIndex == RapidFireMod)
+        set_pvar(SPVAR_12, Values);
+    else if (ListIndex == EnhancementMod)
+        set_pvar(SPVAR_13, Values);
+    else if (ListIndex == StickyScopeMod)
+        set_pvar(SPVAR_15, Values);
+    else if (ListIndex == AimAbuseMod)
+        set_pvar(SPVAR_16, Values);
+    else if (ListIndex == AbuseMod)
+        set_pvar(SPVAR_18, Values);
+    else if (ListIndex == SharpshooterMod)
+        set_pvar(SPVAR_21, Values);
+    else if (ListIndex == RadarMod)
+        set_pvar(SPVAR_22, Values);
+    else if (ListIndex == TurboEditMod)
+        set_pvar(SPVAR_25, Values);
+    else if (ListIndex == DeadzoneCenterMod)
+        set_pvar(SPVAR_26, Values);
+}
+
 function AdjustThroughButton(Values, ButtonInput, ButtonIncrement, MinimumButtonValue, MaximumButtonValue)
 {
     
@@ -1237,6 +1341,9 @@ function AdjustThroughButton(Values, ButtonInput, ButtonIncrement, MinimumButton
         if (Values > MaximumButtonValue)
             Values = MaximumButtonValue;
         RefreshUI = TRUE;
+        
+        // save values immediately to persistent storage
+        SaveCurrentValue();
     }
     return Values;
 }
@@ -1253,6 +1360,7 @@ function Toggle(ListIndex, Values)
             } else {
                 combo_run(RumbleActivate);
             }
+            SaveCurrentToggle(ListIndex, Values);
         }
         RefreshUI = TRUE;
     }
@@ -1266,6 +1374,7 @@ function Toggle(ListIndex, Values)
             } else {
                 combo_run(RumbleActivate);
             }
+            SaveCurrentToggle(ListIndex, Values);
         }
         RefreshUI = TRUE;
     }
@@ -1303,11 +1412,13 @@ function ActiveChangeableValues()
         return TRUE;
     if (CurrentMod == StickyScopeMod && StickyScopeToggle[CurrentProfile])
         return TRUE;
-    if (CurrentMod == ProMod && ProToggle[CurrentProfile])
+    if (CurrentMod == AbuseMod && ProToggle[CurrentProfile])
         return TRUE;
     if (CurrentMod == CrouchShotMod && CrouchShotToggle[CurrentProfile])
         return TRUE;
     if (CurrentMod == RadarMod && RadarToggle[CurrentProfile])
+        return TRUE;
+    if (CurrentMod == DeadzoneCenterMod && DeadzoneCenterToggle[CurrentProfile])
         return TRUE;
     return FALSE;
 }
@@ -1804,8 +1915,6 @@ function Menu()
     set_pvar(SPVAR_2, PickupMacroToggle[0]);
     set_pvar(SPVAR_3, InstaResetToggle[0]);
     set_pvar(SPVAR_4, AntiRecoilToggle[0]);
-    
-    set_pvar(SPVAR_5, NoDelayToggle[0]);
     set_pvar(SPVAR_8, CrouchShotToggle[0]);
     set_pvar(SPVAR_9, AntiBloomToggle[0]);
     set_pvar(SPVAR_10, NoVibrationToggle[0]);
@@ -1830,6 +1939,8 @@ function Menu()
     
 
     set_pvar(SPVAR_25, TurboEditToggle[0]);
+    set_pvar(SPVAR_26, DeadzoneCenterToggle[0]);
+    set_pvar(SPVAR_27, DeadzoneCenterPower[0]);
 }
 
 combo CrouchShot
@@ -2032,14 +2143,13 @@ function AimAssist(Strength, Step)
 combo ControllerPrecision
 {
     set_val(PS4_RY, get_ival(PS4_RY) + EnhancementPower[CurrentProfile]);
-    wait(20);
+    wait(15); // Reduced from 20ms to 15ms for faster response
     set_val(PS4_RX, get_ival(PS4_RX) + EnhancementPower[CurrentProfile]);
-    wait(20);
+    wait(15); // Reduced from 20ms to 15ms for faster response
     set_val(PS4_RY, get_ival(PS4_RY) + EnhancementPower[CurrentProfile] * -1);
-    
-    wait(20);
+    wait(15); // Reduced from 20ms to 15ms for faster response
     set_val(PS4_RX, get_ival(PS4_RX) + EnhancementPower[CurrentProfile] * -1);
-    wait(20);
+    wait(15); // Reduced from 20ms to 15ms for faster response
 }
 
 combo AA1
@@ -2145,3 +2255,14 @@ const int16 PolarArray[] = {
     100, 100, 100, 100, 100 
 };
 
+const int8 PaysonPolarArray[] = {
+    100,100,100,100,100,100,100,100,99,99,99,99,98,98,97,97,97,96,95,95,94,94,93,92,92,91,90,89,89,88,87,86,85,84,83,82,81,80,79,78,77,75,74,73,72,
+    71,70,69,67,66,65,63,62,61,59,58,56,55,53,52,50,49,47,46,44,43,41,40,38,36,35,33,31,30,28,26,25,23,21,20,18,16,14,13,11,9,7,6,4,2,0,-1,-3,-5,-7,
+    -8,-10,-12,-13,-15,-17,-19,-20,-22,-24,-25,-27,-29,-30,-32,-34,-35,-37,-39,-40,-42,-43,-45,-46,-48,-50,-51,-53,-54,-55,-57,-58,-60,-61,-62,-64,
+    -65,-66,-68,-69,-70,-71,-73,-74,-75,-76,-77,-78,-79,-80,-81,-82,-83,-84,-85,-86,-87,-88,-89,-89,-90,-91,-92,-92,-93,-93,-94,-95,-95,-96,-96,-97,
+    -97,-97,-98,-98,-99,-99,-99,-99,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-99,-99,-99,-98,-98,-98,-97,-97,-96,-96,-95,
+    -94,-94,-93,-93,-92,-91,-90,-90,-89,-88,-87,-86,-85,-84,-83,-82,-81,-80,-79,-78,-77,-76,-75,-74,-72,-71,-70,-69,-67,-66,-65,-63,-62,-61,-59,-58,
+    -56,-55,-53,-52,-50,-49,-47,-46,-44,-43,-41,-40,-38,-36,-35,-33,-31,-30,-28,-26,-25,-23,-21,-20,-18,-16,-14,-13,-11,-9,-7,-6,-4,-2,0,2,4,6,7,9,
+    11,13,14,16,18,20,21,23,25,26,28,30,31,33,35,36,38,40,41,43,44,46,47,49,50,52,53,55,56,58,59,61,62,63,65,66,67,69,70,71,72,73,74,75,77,78,79,80,81,82,83,84,85,86,87,88,89,89,90,91,92,92,93,93,94,95,95,96,96,97,97,97,98,98,99,99,99,99,100,100,100,100,100,100,100
+};
+ ����������������
